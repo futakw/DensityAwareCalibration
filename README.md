@@ -20,13 +20,13 @@ This compares ETS vs ETS+DAC for CIFAR10-ResNet18.
 (Also SPL vs SPL+DAC by changing arguments)
 
 # Structure
-- density_aware_calib.py: our method is here.
-- utils: some codes imported by others and modified.
+- density_aware_calib.py: Our method is here.
+- utils: Some codes imported from others, and modified.
     - Evaluation codes, ETS: from https://github.com/zhang64-llnl/Mix-n-Match-Calibration
     - SPL: from https://github.com/kartikgupta-at-anu/spline-calibration
 
 # Note:
-To run experiments, features/outputs/labels from the classifier should be stored as, for example,
+To run experiments, features, outputs (logits), labels from the classifier should be stored as, for example,
 ```
 Features: outputs/{dataset_name}/{classifier_name}/{data_type}/features/{layer_name}.pickle
 Logits: outputs/{dataset_name}/{classifier_name}/{data_type}/outputs.pickle
