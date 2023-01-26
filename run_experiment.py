@@ -111,10 +111,6 @@ if __name__=="__main__":
     acc = calc_acc(val_outputs, val_labels)
     print("Validation Acc: ", acc)
 
-    print(val_outputs)
-    print(val_labels)
-    asda
-
     print("\nCalculating knn scores on validation set...")
     val_feat = []
     for layer in args.ood_scoring_layers_list:
@@ -141,17 +137,29 @@ if __name__=="__main__":
     if args.combination_method == "ETS":
         p = ets_calibrate(val_calib_logits, val_labels, 
             val_calib_logits, args.num_classes, 'mse')
-    # elif args.combination_method == "SPL":
-    #     SPL_frecal, p, label = get_spline_calib_func(val_outputs, val_labels)
-    #     SPL_DAC_frecal, p, label = get_spline_calib_func(val_calib_logits, val_labels)
+    elif args.combination_method == "SPL":
+        SPL_frecal, p, label = get_spline_calib_func(val_outputs, val_labels)
+        SPL_DAC_frecal, p, label = get_spline_calib_func(val_calib_logits, val_labels)
     else:
         raise NotImplementedError
 
     # print("\nCalibration performance of validation set")
-    # train_ece_dict, train_nll, train_mse, train_accu = ece_eval_all(p, val_labels)
-    # print("=> train_ece_1:", train_ece_dict["ece_1"],)
-    # print("=> train_kde_ece:", train_ece_dict["ece_kde_1"],)
-
+    # if args.combination_method != "SPL":
+    #     test_ece_dict, test_nll, test_mse, test_accu = ece_eval_all(p_eval_without_DAC, this_labels)
+    #     print(f"- {args.combination_method} w/o DAC: test_ece_1:", test_ece_dict["ece_1"],)
+        
+    #     test_ece_dict, test_nll, test_mse, test_accu = ece_eval_all(p_eval, this_labels)
+    #     print(f"- {args.combination_method} + DAC: test_ece_1:", test_ece_dict["ece_1"],)
+    # else:
+    #     # spline only calibrates top 1 prediction, different func to eval
+    #     test_ece_dict, test_nll, test_mse, test_accu = ece_eval_all_from_conf_acc(
+    #         p_eval_without_DAC, label_eval_withoutDAC)
+    #     print(f"- {args.combination_method} w/o DAC: test_ece_1:", test_ece_dict["ece_1"],)
+        
+    #     test_ece_dict, test_nll, test_mse, test_accu = ece_eval_all_from_conf_acc(
+    #         p_eval, label_eval)
+    #     print(f"- {args.combination_method} + DAC: test_ece_1:", test_ece_dict["ece_1"],)
+    
     
     # calibrate test set
     for k in keys:
