@@ -9,7 +9,7 @@ import pandas as pd
 
 from utils.util_calibration import ts_calibrate, ets_calibrate, mir_calibrate, irova_calibrate
 from utils.util_evaluation import ece_eval_all, ece_eval_all_from_conf_acc
-# from utils.spline import get_spline_calib_func, spline_calib
+from utils.spline import get_spline_calib_func, spline_calibrate
 
 
 from density_aware_calib import KNNScorer, DAC
@@ -68,9 +68,6 @@ if __name__=="__main__":
     parser.add_argument('--combination_method', 
         type=str, default="ETS", choices=["ETS", "SPL"]
     )
-
-    parser.add_argument('--save_calib_logits', type=str2bool, default=False)
-    parser.add_argument('--save_calib_dir', type=str, default="calib_outputs")
     
     parser.add_argument('--test_data_type', type=str, nargs="*", default="gaussian_noise_3")  
 
@@ -105,6 +102,9 @@ if __name__=="__main__":
     
     #########  Calibration ###########
     # calculate OOD score for the validation set.
+    n = -1
+    spline_method = "natural"
+    splines = 6
     val_save_d = os.path.join(args.save_outputs_dir, "val")
     val_labels = load_pickle(os.path.join(val_save_d, "labels.pickle"))
     val_outputs = load_pickle(os.path.join(val_save_d, "outputs.pickle"))
@@ -138,27 +138,27 @@ if __name__=="__main__":
         p = ets_calibrate(val_calib_logits, val_labels, 
             val_calib_logits, args.num_classes, 'mse')
     elif args.combination_method == "SPL":
-        SPL_frecal, p, label = get_spline_calib_func(val_outputs, val_labels)
+        SPL_frecal, p_without_DAC, label_without_DAC = get_spline_calib_func(val_outputs, val_labels)
         SPL_DAC_frecal, p, label = get_spline_calib_func(val_calib_logits, val_labels)
     else:
         raise NotImplementedError
 
-    # print("\nCalibration performance of validation set")
-    # if args.combination_method != "SPL":
-    #     test_ece_dict, test_nll, test_mse, test_accu = ece_eval_all(p_eval_without_DAC, this_labels)
-    #     print(f"- {args.combination_method} w/o DAC: test_ece_1:", test_ece_dict["ece_1"],)
+    print("\nCalibration performance of validation set")
+    if args.combination_method != "SPL":
+        test_ece_dict, test_nll, test_mse, test_accu = ece_eval_all(p_without_DAC, val_labels)
+        print(f"- {args.combination_method} w/o DAC: test_ece_1:", test_ece_dict["ece_1"],)
         
-    #     test_ece_dict, test_nll, test_mse, test_accu = ece_eval_all(p_eval, this_labels)
-    #     print(f"- {args.combination_method} + DAC: test_ece_1:", test_ece_dict["ece_1"],)
-    # else:
-    #     # spline only calibrates top 1 prediction, different func to eval
-    #     test_ece_dict, test_nll, test_mse, test_accu = ece_eval_all_from_conf_acc(
-    #         p_eval_without_DAC, label_eval_withoutDAC)
-    #     print(f"- {args.combination_method} w/o DAC: test_ece_1:", test_ece_dict["ece_1"],)
+        test_ece_dict, test_nll, test_mse, test_accu = ece_eval_all(p, val_labels)
+        print(f"- {args.combination_method} + DAC: test_ece_1:", test_ece_dict["ece_1"],)
+    else:
+        # spline only calibrates top 1 prediction, so different func to eval
+        test_ece_dict, test_nll, test_mse, test_accu = ece_eval_all_from_conf_acc(
+            p_without_DAC, label_without_DAC)
+        print(f"- {args.combination_method} w/o DAC: test_ece_1:", test_ece_dict["ece_1"],)
         
-    #     test_ece_dict, test_nll, test_mse, test_accu = ece_eval_all_from_conf_acc(
-    #         p_eval, label_eval)
-    #     print(f"- {args.combination_method} + DAC: test_ece_1:", test_ece_dict["ece_1"],)
+        test_ece_dict, test_nll, test_mse, test_accu = ece_eval_all_from_conf_acc(
+            p, label)
+        print(f"- {args.combination_method} + DAC: test_ece_1:", test_ece_dict["ece_1"],)
     
     
     # calibrate test set
@@ -192,13 +192,13 @@ if __name__=="__main__":
                 this_outputs, args.num_classes, 'mse')
             p_eval = ets_calibrate(val_calib_logits, val_labels, 
                 calib_logits_eval, args.num_classes, 'mse')
-        # elif args.combination_method == "SPL":
-        #     p_eval_without_DAC, label_eval_withoutDAC = spline_calib(
-        #         SPL_frecal, this_outputs, this_labels
-        #     )
-        #     p_eval, label_eval = spline_calib(
-        #         SPL_DAC_frecal, calib_logits_eval, this_labels
-        #     )
+        elif args.combination_method == "SPL":
+            p_eval_without_DAC, label_eval_withoutDAC = spline_calibrate(
+                SPL_frecal, this_outputs, this_labels
+            )
+            p_eval, label_eval = spline_calibrate(
+                SPL_DAC_frecal, calib_logits_eval, this_labels
+            )
         else:
             raise NotImplementedError
 

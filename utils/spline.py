@@ -28,10 +28,13 @@ from scipy.special import softmax
 
 
 ######### My code
-def get_spline_calib_func(logits, labels, n=-1, spline_method="natural", splines=6):
+def get_spline_calib_func(
+    logits, labels, 
+    n=-1, spline_method="natural", splines=6
+    ):
     # to run Spline calibration from:
     # https://github.com/kartikgupta-at-anu/spline-calibration
-    y_probs_val, y_val = softmax(logits), np.argmax(labels, axis=1)
+    y_probs_val, y_val = softmax(logits, 1), np.argmax(labels, axis=1)
     
     scores1, labels1, scores1_class = get_top_results (y_probs_val, y_val, n, return_topn_classid=True)
     # Get recalibration function, based on scores1
@@ -41,24 +44,24 @@ def get_spline_calib_func(logits, labels, n=-1, spline_method="natural", splines
     scores1[scores1 < 0.0] = 0.0
     scores1[scores1 > 1.0] = 1.0
     p = scores1
-    label = labels1
+    label = labels1 # accuracy
     return frecal, p, label
 
-def spline_calib(spline_calib_func, logits, labels, n=-1,):
+def spline_calibrate(spline_calib_func, logits, labels, n=-1,):
     # to run Spline calibration from:
     # https://github.com/kartikgupta-at-anu/spline-calibration
-    y_probs_test = softmax(logits)
+    y_probs_test = softmax(logits, 1)
     y_test = np.argmax(labels, axis=1)
     scores2, labels2, scores2_class = get_top_results (y_probs_test, y_test, n, return_topn_classid=True)
     scores2 = np.array([spline_calib_func(float(sc)) for sc in scores2])
     scores2[scores2 < 0.0] = 0.0
     scores2[scores2 > 1.0] = 1.0
-    return scores2, labels2
+    return scores2, labels2 # accuracy
 #########
 
 
 #########
-# brought from utililies/utils 
+# copied from utililies/utils 
 def len0(x) :
   # Proper len function that REALLY works.
   # It gives the number of indices in first dimension
@@ -92,7 +95,7 @@ def len0(x) :
 
   return 0
 
-# imported from utils.spline-
+# copied from utilities/spline
 class Spline () :
 
    # Initializer
