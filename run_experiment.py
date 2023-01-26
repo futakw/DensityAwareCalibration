@@ -9,6 +9,8 @@ import pandas as pd
 
 from utils.util_calibration import ts_calibrate, ets_calibrate, mir_calibrate, irova_calibrate
 from utils.util_evaluation import ece_eval_all, ece_eval_all_from_conf_acc
+# from utils.spline import get_spline_calib_func, spline_calib
+
 
 from density_aware_calib import KNNScorer, DAC
 
@@ -42,7 +44,6 @@ def calc_acc(outputs_eval, label_eval):
     acc = np.array(np.argmax(outputs_eval, 1) == label_eval).mean()
     return acc
 
-
 if __name__=="__main__":
     def str2bool(s):
         if s.lower() in ["t", "true"]:
@@ -65,7 +66,7 @@ if __name__=="__main__":
     parser.add_argument('--ood_scoring_layers_list', type=str, nargs="*", 
         default=["maxpool", "layer1", "layer2", "layer3", "layer4", "logits"]) 
     parser.add_argument('--combination_method', 
-        type=str, default="ETS", # options=["ETS", "SPL"]
+        type=str, default="ETS", choices=["ETS", "SPL"]
     )
 
     parser.add_argument('--save_calib_logits', type=str2bool, default=False)
@@ -74,7 +75,6 @@ if __name__=="__main__":
     parser.add_argument('--test_data_type', type=str, nargs="*", default="gaussian_noise_3")  
 
     args = parser.parse_args()  
-
 
     if args.dataset == "cifar10":
         args.num_classes = 10
@@ -95,7 +95,6 @@ if __name__=="__main__":
     train_outputs = load_pickle(os.path.join(train_save_d, "outputs.pickle"))
 
     OODscorer = KNNScorer(
-        train_labels,
         top_k=args.knn_k,
     )
 
@@ -111,6 +110,10 @@ if __name__=="__main__":
     val_outputs = load_pickle(os.path.join(val_save_d, "outputs.pickle"))
     acc = calc_acc(val_outputs, val_labels)
     print("Validation Acc: ", acc)
+
+    print(val_outputs)
+    print(val_labels)
+    asda
 
     print("\nCalculating knn scores on validation set...")
     val_feat = []
@@ -138,6 +141,9 @@ if __name__=="__main__":
     if args.combination_method == "ETS":
         p = ets_calibrate(val_calib_logits, val_labels, 
             val_calib_logits, args.num_classes, 'mse')
+    # elif args.combination_method == "SPL":
+    #     SPL_frecal, p, label = get_spline_calib_func(val_outputs, val_labels)
+    #     SPL_DAC_frecal, p, label = get_spline_calib_func(val_calib_logits, val_labels)
     else:
         raise NotImplementedError
 
@@ -178,14 +184,32 @@ if __name__=="__main__":
                 this_outputs, args.num_classes, 'mse')
             p_eval = ets_calibrate(val_calib_logits, val_labels, 
                 calib_logits_eval, args.num_classes, 'mse')
+        # elif args.combination_method == "SPL":
+        #     p_eval_without_DAC, label_eval_withoutDAC = spline_calib(
+        #         SPL_frecal, this_outputs, this_labels
+        #     )
+        #     p_eval, label_eval = spline_calib(
+        #         SPL_DAC_frecal, calib_logits_eval, this_labels
+        #     )
         else:
             raise NotImplementedError
 
         # evaluate
         print(f"\nCalibration performance on test set: {k}")
         
-        test_ece_dict, test_nll, test_mse, test_accu = ece_eval_all(p_eval_without_DAC, this_labels)
-        print(f"- {args.combination_method} w/o DAC: test_ece_1:", test_ece_dict["ece_1"],)
+        if args.combination_method != "SPL":
+            test_ece_dict, test_nll, test_mse, test_accu = ece_eval_all(p_eval_without_DAC, this_labels)
+            print(f"- {args.combination_method} w/o DAC: test_ece_1:", test_ece_dict["ece_1"],)
+            
+            test_ece_dict, test_nll, test_mse, test_accu = ece_eval_all(p_eval, this_labels)
+            print(f"- {args.combination_method} + DAC: test_ece_1:", test_ece_dict["ece_1"],)
+        else:
+            # spline only calibrates top 1 prediction, different func to eval
+            test_ece_dict, test_nll, test_mse, test_accu = ece_eval_all_from_conf_acc(
+                p_eval_without_DAC, label_eval_withoutDAC)
+            print(f"- {args.combination_method} w/o DAC: test_ece_1:", test_ece_dict["ece_1"],)
+            
+            test_ece_dict, test_nll, test_mse, test_accu = ece_eval_all_from_conf_acc(
+                p_eval, label_eval)
+            print(f"- {args.combination_method} + DAC: test_ece_1:", test_ece_dict["ece_1"],)
         
-        test_ece_dict, test_nll, test_mse, test_accu = ece_eval_all(p_eval, this_labels)
-        print(f"- {args.combination_method} + DAC: test_ece_1:", test_ece_dict["ece_1"],)

@@ -47,7 +47,6 @@ def np_softmax(x):
 
 class KNNScorer(object):
     def __init__(self, 
-        # method, 
         top_k=1, 
         avg_top_k=False,  
         return_dist_arr=False 
@@ -61,8 +60,8 @@ class KNNScorer(object):
         return_dist_arr:
             if return distance matrix, instead of one value for each sample.
         """
-        self.avg_top_k = avg_top_k
         self.top_k = top_k
+        self.avg_top_k = avg_top_k
         self.return_dist_arr = return_dist_arr
 
         # knn
