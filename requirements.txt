@@ -1,4 +1,4 @@
-faiss-cpu==1.7.2
+faiss-gpu==1.7.2
 KDEpy==1.1.0
 matplotlib==3.6.0
 numpy==1.23.3

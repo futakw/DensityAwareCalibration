@@ -34,7 +34,6 @@ def mirror_1d(d, xmin=None, xmax=None):
 
 
 def ece_kde_binary(p, label, p_int=None, order=1):
-
     # points from numerical integration
     if p_int is None:
         p_int = np.copy(p)
@@ -42,7 +41,7 @@ def ece_kde_binary(p, label, p_int=None, order=1):
     p = np.clip(p, 1e-256, 1 - 1e-256)
     p_int = np.clip(p_int, 1e-256, 1 - 1e-256)
 
-    x_int = np.linspace(-0.6, 1.6, num=2**14)  # x points to use after KDE estimated.
+    x_int = np.linspace(-0.6, 1.6, num=2 ** 14)  # x points to use after KDE estimated.
 
     N = p.shape[0]
 
@@ -147,15 +146,13 @@ def ece_kde_binary(p, label, p_int=None, order=1):
     return np.trapz(integral[ind], x_int[ind]) / np.trapz(pp2[ind], x_int[ind])
 
 
-
 def ece_kde_binary_from_conf_acc(confidences, accuracies, p_int=None, order=1):
-
     # # points from numerical integration
     # if p_int is None:
     #     p_int = np.copy(p)
     N = confidences.shape[0]
 
-    x_int = np.linspace(-0.6, 1.6, num=2**14)  # x points to use after KDE estimated.
+    x_int = np.linspace(-0.6, 1.6, num=2 ** 14)  # x points to use after KDE estimated.
 
     # conf to tensor
     p_b = torch.from_numpy(confidences)
@@ -164,7 +161,6 @@ def ece_kde_binary_from_conf_acc(confidences, accuracies, p_int=None, order=1):
     # points from numerical integration
     if p_int is None:
         pred_b_int = np.copy(p_b).reshape(-1, 1)
-        
 
     method = "triweight"
 
@@ -237,7 +233,6 @@ def ece_kde_binary_from_conf_acc(confidences, accuracies, p_int=None, order=1):
     return np.trapz(integral[ind], x_int[ind]) / np.trapz(pp2[ind], x_int[ind])
 
 
-
 def ece_hist_binary(p, label, n_bins=15, order=1):
     # binary: correct or incorrect?
     # label: one-hot
@@ -298,7 +293,6 @@ def ece_hist_binary(p, label, n_bins=15, order=1):
                     * prop_in_bin
                 )
     return ece_avg.cpu().numpy()[0]
-
 
 
 def ece_hist_binary_from_conf_acc(confidences, accuracies, n_bins=15, order=1):
@@ -424,7 +418,9 @@ def ece_binary(p, label, n_bins=15, order=1, get_data=False):
         return ece_avg
 
 
-def ece_binary_from_conf_acc(confidences, accuracies, n_bins=15, order=1, get_data=False):
+def ece_binary_from_conf_acc(
+    confidences, accuracies, n_bins=15, order=1, get_data=False
+):
     N = confidences.shape[0]
 
     # print(confidences)
@@ -458,9 +454,7 @@ def ece_binary_from_conf_acc(confidences, accuracies, n_bins=15, order=1, get_da
             acc_in_bin[i] = accuracies[in_bin].float().mean()
             conf_in_bin[i] = confidences[in_bin].mean()
             n_in_bin[i] = (in_bin == True).sum()
-            ece_avg += (
-                torch.abs(conf_in_bin[i] - acc_in_bin[i]) ** order * prop_in_bin
-            )
+            ece_avg += torch.abs(conf_in_bin[i] - acc_in_bin[i]) ** order * prop_in_bin
 
     ece_avg = ece_avg.cpu().numpy()[0]
 
@@ -494,7 +488,6 @@ from sklearn.preprocessing import label_binarize
 
 
 def binary_ECE(probs, y_true, power=1, bins=15):
-
     idx = np.digitize(probs, np.linspace(0, 1, bins)) - 1
     bin_func = (
         lambda p, y, idx: (np.abs(np.mean(p[idx]) - np.mean(y[idx])) ** power)
@@ -509,7 +502,6 @@ def binary_ECE(probs, y_true, power=1, bins=15):
 
 
 def classwise_ECE(probs, y_true, power=1, bins=15):
-
     probs = np.array(probs)
     if not np.array_equal(probs.shape, y_true.shape):
         y_true = label_binarize(np.array(y_true), classes=range(probs.shape[1]))
@@ -522,60 +514,6 @@ def classwise_ECE(probs, y_true, power=1, bins=15):
             for c in range(n_classes)
         ]
     )
-
-
-# def ece_classwise(p, labels, n_bins=15, order=1, get_data=False):
-#     """
-#     p: one hot (B x C)
-#     labels: one hot (B x C)
-#     """
-#     # label_index = np.array([np.where(r==1)[0][0] for r in label]) # one hot to index
-
-#     # N = p.shape[0] # the number of data
-#     # B, num_classes = label.shape
-
-#     # ECE_each = np.zeros(num_classes)
-#     # d_each = []
-#     # for c in range(num_classes):
-
-#     #     # instances of class c
-#     #     this_p = p[:, c]
-#     #     this_labels = labels.eq(c).float()
-
-#     #     # get confs and accs
-#     #     ece, d = ece_binary(this_p, this_labels,
-#     #         n_bins=n_bins, order=order, get_data=True)
-#     #     ECE_each[c] = ece
-#     #     d_each.append(d)
-
-#     # cw_ECE = ECE_each.mean()
-#     softmaxes = torch.from_numpy(p)
-#     labels = torch.from_numpy(labels)
-
-#     bin_boundaries = torch.linspace(0, 1, n_bins + 1)
-#     bin_lowers = bin_boundaries[:-1]
-#     bin_uppers = bin_boundaries[1:]
-
-#     num_classes = softmaxes.shape[1]
-#     cw_ece = torch.zeros(1)
-#     for j in range(num_classes):
-#       confidences_j = softmaxes[:,j]
-#       ece_j = torch.zeros(1)
-#       for bin_lower, bin_upper in zip(bin_lowers, bin_uppers):
-#         in_bin = confidences_j.gt(bin_lower.item()) * confidences_j.le(bin_upper.item())
-#         prop_in_bin = in_bin.float().mean()
-#         if prop_in_bin.item() > 0:
-#           accuracy_j_in_bin = labels[in_bin].eq(j).float().mean()
-#           avg_confidence_j_in_bin = confidences_j[in_bin].mean()
-#           ece_j += torch.abs(avg_confidence_j_in_bin - accuracy_j_in_bin) * prop_in_bin
-#       cw_ece += ece_j
-
-#     cw_ece = cw_ece.numpy()
-#     if get_data:
-#         return cw_ece, d_each
-#     else:
-#         return cw_ece
-
 
 def ece_eval_binary(p, label, ece_type="hist"):
     """
@@ -646,7 +584,6 @@ def len0(x):
 
 
 def get_top_results(scores, labels, nn, inclusive=False, return_topn_classid=False):
-
     # Different if we want to take inclusing scores
     if inclusive:
         return get_top_results_inclusive(scores, labels, nn=nn)
@@ -677,7 +614,6 @@ def KS_error(
     logits,
     labels,
 ):
-
     # to indices
     labels = one_hot2indices(labels)
 
@@ -712,7 +648,6 @@ def KS_error_from_conf_acc(
     confidences,
     accuracies,
 ):
-
     scores = confidences
     labels = accuracies
 
@@ -743,11 +678,17 @@ def ece_eval_all_from_conf_acc(confidences, accuracies, n_bins=15):
     accu = accuracies.mean()
 
     ece_dict = {}
-    ece_1, ece_1_d = ece_binary_from_conf_acc(confidences, accuracies, n_bins=n_bins, order=1, get_data=True)
+    ece_1, ece_1_d = ece_binary_from_conf_acc(
+        confidences, accuracies, n_bins=n_bins, order=1, get_data=True
+    )
     ece_dict["ece_1"] = ece_1
     ece_dict["ece_1_d"] = ece_1_d
-    ece_dict["ece_hist_1"] = ece_hist_binary_from_conf_acc(confidences, accuracies, n_bins=n_bins, order=1)
-    ece_dict["ece_kde_1"] = ece_kde_binary_from_conf_acc(confidences, accuracies, order=1)
+    ece_dict["ece_hist_1"] = ece_hist_binary_from_conf_acc(
+        confidences, accuracies, n_bins=n_bins, order=1
+    )
+    ece_dict["ece_kde_1"] = ece_kde_binary_from_conf_acc(
+        confidences, accuracies, order=1
+    )
     ece_dict["cw_ece_1"] = 999
     ece_dict["KS"] = KS_error_from_conf_acc(confidences, accuracies)
     return ece_dict, nll, mse, accu
@@ -825,53 +766,3 @@ def eval_metrics(p, label, n_bins=15):
         # "cw_ece_1": cw_ece_1_d,
     }
     return metrics, bins_data
-
-
-# class EvalMeter:
-#     def __init__(self):
-#         self.best_metrics = {
-#             "mse": {},
-#             "nll": {},
-#             "ece_1": {},
-#             "cw_ece_1": {},
-#             "ece_hist_1": {},
-#             "ece_kde_1": {},
-#         }
-
-
-#     def add(self, p, label, val_p, val_label, best_metric="mse"):
-
-#         metrics, bins_data = self.eval(p, label)
-#         metrics, bins_data = self.eval(val_p, val_label)
-
-
-#     def eval(self, p, label, n_bins=15):
-#         """
-#         p: probabilities (N, C) numpy array
-#         label: labels (N, C) numpy array (one hot vector)
-#         """
-#         # label should be one hot vector
-#         N, C = p.shape
-#         if len(label.shape) == 1:
-#             label = np.eye(C)[label[:,None]]
-#         elif label.shape[1] == 1:
-#             label = np.eye(C)[label]
-
-#         ece_1, ece_1_d = ece_binary(p,label,n_bins=n_bins,order=1,get_data=True)
-#         cw_ece_1, cw_ece_1_d = ece_classwise(p,label,n_bins=n_bins,order=1, get_data=True)
-
-#         metrics = {
-#             "mse": np.mean(np.sum((p-label)**2,1)),
-#             "nll": -np.sum(label*np.log(p))/N,
-#             "acc": (np.sum((np.argmax(p,1)-np.array([np.where(r==1)[0][0] for r in label]))==0)/p.shape[0]),
-#             "ece_1": ece_1,
-#             "cw_ece_1": cw_ece_1,
-#             "ece_hist_1": ece_hist_binary(p,label,n_bins=n_bins,order=1),
-#             "ece_kde_1": ece_kde_binary(p,label,order=1),
-#         }
-
-#         bins_data = {
-#             "ece_1": ece_1_d,
-#             "cw_ece_1": cw_ece_1_d,
-#         }
-#         return metrics, bins_data

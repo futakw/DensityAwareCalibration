@@ -1,4 +1,6 @@
-outputs
+outputs/*
+ckpts/*
+data/*
 venv
 *.pickle
 *.zip
