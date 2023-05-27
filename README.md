@@ -1,9 +1,40 @@
-# Density-Aware Calibration, ICML 2023 (official implementation)
-Official implementation of Density-Aware Calibration (DAC), presented in,
+# Density-Aware Calibration, ICML 2023 (official from author)
+Official implementation of Density-Aware Calibration (DAC), presented in, "Beyond In-Domain Scenarios: Robust Density-Aware Calibration.", ICML 2023. 
+(arXiv: https://arxiv.org/abs/2302.05118)
 
-"Beyond In-Domain Scenarios: Robust Density-Aware Calibration.", ICML 2023. 
+### Approach
+![fig1](figures/teaser_fig_1.png)
+![fig2](figures/teaser_fig_2.png)
 
-(arXiv link: https://arxiv.org/abs/2302.05118)
+DAC boosts the calibration performance of the existing post-hoc calibration methods, especially in the domain-shift scenario.
+DAC leverages information from feature vectors $z_1,...,z_L$ across the entire classifier $f$. DAC is based on KNN, where predictive uncertainty is expected to be high for test samples lying in low-density regions of the empirical training distribution and vice versa.
+
+
+In this repo, you can reproduce the following results.
+
+Calibration results for CIFAR10, ResNet18:
+- ETS vs. ETS+DAC (ours).
+```
+(ECE, the lower the better)
++----+------------------+---------------+-------------+ 
+|    | test data        |   ETS w/o DAC |   ETS + DAC |
+|----+------------------+---------------+-------------|
+|  0 | natural_1        |    0.0140503  |  0.00914035 |
+|  1 | gaussian_noise_3 |    0.049552   |  0.0417358  |
+|  2 | gaussian_noise_5 |    0.0895087  |  0.0737432  |
++----+------------------+---------------+-------------+
+```
+- SPL vs. SPL+DAC (ours).
+```
+(ECE, the lower the better)
++----+------------------+---------------+-------------+ 
+|    | test data        |   SPL w/o DAC |   SPL + DAC |
+|----+------------------+---------------+-------------|
+|  0 | natural_1        |     0.0212603 |  0.0110497  |
+|  1 | gaussian_noise_3 |     0.0626791 |  0.0462725  |
+|  2 | gaussian_noise_5 |     0.100395  |  0.0818528  |
++----+------------------+---------------+-------------+
+```
 
 ### Cite our paper
 If you find this repository useful, please cite our paper:
@@ -15,33 +46,6 @@ If you find this repository useful, please cite our paper:
   year={2023}
 }
 ```
-
-### DAC boosts the calibration performance of the existing post-hoc calibration methods, especially in the domain-shift scenario.
-In this repo, you can reproduce the following results.
-
-Expected results for CIFAR10, ResNet18:
-- Comparison of ETS and ETS + DAC.
-"""
-(ECE, the lower the better)
-+----+------------------+---------------+-------------+ 
-|    | test data        |   ETS w/o DAC |   ETS + DAC |
-|----+------------------+---------------+-------------|
-|  0 | natural_1        |    0.0140503  |  0.00914035 |
-|  1 | gaussian_noise_3 |    0.049552   |  0.0417358  |
-|  2 | gaussian_noise_5 |    0.0895087  |  0.0737432  |
-+----+------------------+---------------+-------------+
-"""
-- Comparison of SPL and SPL + DAC.
-"""
-(ECE, the lower the better)
-+----+------------------+---------------+-------------+ 
-|    | test data        |   SPL w/o DAC |   SPL + DAC |
-|----+------------------+---------------+-------------|
-|  0 | natural_1        |     0.0212603 |  0.0110497  |
-|  1 | gaussian_noise_3 |     0.0626791 |  0.0462725  |
-|  2 | gaussian_noise_5 |     0.100395  |  0.0818528  |
-+----+------------------+---------------+-------------+
-"""
 
 # Usage
 ## Environment set up
