@@ -63,11 +63,11 @@ def cifar10(
 
     # train. val split
     trainset = torchvision.datasets.CIFAR10(
-        root=data_root, train=True, download=False, transform=transform_train
+        root=data_root, train=True, download=True, transform=transform_train
     )
 
     valset = torchvision.datasets.CIFAR10(
-        root=data_root, train=True, download=False, transform=transform_test
+        root=data_root, train=True, download=True, transform=transform_test
     )
 
     indices = list(range(50000))
@@ -88,7 +88,7 @@ def cifar10(
 
     # test loader
     testset = torchvision.datasets.CIFAR10(
-        root=data_root, train=False, download=False, transform=transform_test
+        root=data_root, train=False, download=True, transform=transform_test
     )
     test_loader = torch.utils.data.DataLoader(
         testset, batch_size=batch_size, shuffle=False, num_workers=num_workers
@@ -175,10 +175,10 @@ def cifar100(
 
     # train. val split
     trainset = torchvision.datasets.CIFAR100(
-        root=data_root, train=True, download=False, transform=transform_train
+        root=data_root, train=True, download=True, transform=transform_train
     )
     valset = torchvision.datasets.CIFAR100(
-        root=data_root, train=True, download=False, transform=transform_test
+        root=data_root, train=True, download=True, transform=transform_test
     )
 
     indices = list(range(50000))
@@ -199,7 +199,7 @@ def cifar100(
 
     # test loader
     testset = torchvision.datasets.CIFAR100(
-        root=data_root, train=False, download=False, transform=transform_test
+        root=data_root, train=False, download=True, transform=transform_test
     )
     test_loader = torch.utils.data.DataLoader(
         testset, batch_size=batch_size, shuffle=False, num_workers=num_workers

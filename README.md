@@ -88,17 +88,14 @@ source venv/bin/activate
 bash scripts/whole_pipeline.sh
 ```
 
-### 3. Inference pipeline: 
-
-
-
-# Structure of this repository
+### Structure of this repository
 - density_aware_calib.py: Our method is here.
 - utils: Some codes imported from other repos and modified.
     - Evaluation codes, ETS: from https://github.com/zhang64-llnl/Mix-n-Match-Calibration
     - SPL: from https://github.com/kartikgupta-at-anu/spline-calibration
 
-# Note: 
+
+### Note: 
 features/ood_score, outputs (logits), labels from the classifier will be saved in the following structure, by running _extract_feature_and_knn_score.py_:
 ```
 - outputs
