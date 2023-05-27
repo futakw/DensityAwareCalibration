@@ -52,17 +52,11 @@ parser.add_argument(
 
 args = parser.parse_args()
 
-if args.dataset == "cifar10":
-    args.num_classes = 10
-    args.knn_k = 50
-elif args.dataset == "cifar100":
-    args.num_classes = 100
-    args.knn_k = 200
-elif args.dataset == "imagenet":
-    args.num_classes = 1000
-    args.knn_k = 10 # if using 1% of ImageNet data
-else:
-    raise NotImplementedError
+# load DAC hyperparams
+from constants.dac_hyperparams import hyperparams
+args.num_classes = hyperparams[args.dataset]["num_classes"]
+args.top_k = hyperparams[args.dataset]["knn_k"]
+args.train_data_ratio = hyperparams[args.dataset]["train_data_ratio"]
 
 args.ood_values_num = len(args.ood_scoring_layers_list)
 test_data_type = args.test_data_type

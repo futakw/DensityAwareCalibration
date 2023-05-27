@@ -23,6 +23,7 @@ def get_layers_name(
         print(return_nodes)
         return return_nodes
 
+    # https://github.com/weiaicunzai/pytorch-cifar100
     if "cifar100_resnet18" == model_name:
         return_nodes = ["conv1", "conv2_x", "conv3_x", "conv4_x", "conv5_x"]
     elif "cifar100_vgg16_bn" == model_name:
@@ -42,6 +43,7 @@ def get_layers_name(
             "avgpool",
         ]
 
+    # pytorch official models
     elif "resnet" in model_name:
         return_nodes = [
             "maxpool",
@@ -69,6 +71,7 @@ def get_layers_name(
             "features.norm5",
         ]
 
+    # timm models
     elif "xception" == model_name:
         return_nodes = ["act2"]
         for i in range(1, 13):

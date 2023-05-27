@@ -22,7 +22,6 @@ from utils.get_models import FeatureExtractor
 from density_aware_calib import KNNScorer
 
 device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
-print("device: ", device)
 print("Visible devices num: ", torch.cuda.device_count())
 
 
@@ -108,7 +107,7 @@ def extract_features_and_save_ood_scores(
             del inputs, outputs, labels, feat
             gc.collect()
 
-            to_end = batch_sum * args.end_ratio < batch_idx if split == "train" else False
+            to_end = batch_sum * args.train_data_ratio < batch_idx if split == "train" else False
             if (
                 (len(data["outputs"]) >= save_batch_interval)
                 or (batch_sum == batch_idx + 1)
@@ -153,7 +152,7 @@ def extract_features_and_save_ood_scores(
                 save_idx += 1
 
             if to_end:
-                print(f"End at data ratio={args.end_ratio}. batch_idx={batch_idx}")
+                print(f"End at data ratio={args.train_data_ratio}. batch_idx={batch_idx}")
                 break
 
     # combine saved files
@@ -276,7 +275,8 @@ if __name__ == "__main__":
     import sys
     import argparse
     from utils.dataset import get_loaders
-    from constants import get_layers_name
+    from constants.layer_names import get_layers_name
+    from constants.dac_hyperparams import hyperparams
     from utils.get_models import get_model
 
     parser = argparse.ArgumentParser(description="")
@@ -293,7 +293,7 @@ if __name__ == "__main__":
     parser.add_argument("--is_all_layers", type=str2bool, default=False)
     parser.add_argument("--save_only_ood_scores", type=str2bool, default=True)
     parser.add_argument("--save_dist_arr", type=str2bool, default=False)
-    parser.add_argument("--end_ratio", type=float, default=1.0)
+    parser.add_argument("--train_data_ratio", type=float, default=1.0)
     parser.add_argument("--save_batch_interval", type=int, default=100)
     parser.add_argument(
         "--test_data_type", type=str, nargs="*", 
@@ -323,24 +323,16 @@ if __name__ == "__main__":
 
     args = parser.parse_args()
 
-    if args.dataset == "imagenet":
-        args.num_classes = c = 1000
-        args.top_k = 10
-        args.end_ratio = 0.1
-    elif args.dataset == "cifar100":
-        args.num_classes = c = 100
-        args.top_k = 200
-    elif args.dataset == "cifar10":
-        args.num_classes = c = 10
-        args.top_k = 50
-    else:
-        raise ValueError
+    # load DAC hyperparams
+    args.num_classes = hyperparams[args.dataset]["num_classes"]
+    args.top_k = hyperparams[args.dataset]["knn_k"]
+    args.train_data_ratio = hyperparams[args.dataset]["train_data_ratio"]
 
     print("\n===============")
     print("Dataset: ", args.dataset)
     print("Model: ", args.model_name)
     print("Top k for KNN score: ", args.top_k)
-    print("Ratio of train set to use: ", args.end_ratio)
+    print("Ratio of train set to use: ", args.train_data_ratio)
     print("===============\n")
 
 

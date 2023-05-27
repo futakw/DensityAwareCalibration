@@ -5,7 +5,7 @@ Official implementation of **Density-Aware Calibration (DAC)** presented in,
 (arXiv: https://arxiv.org/abs/2302.05118)
 
 ### Approach
-<img src="https://github.com/futakw/DensityAwareCalibration/blob/master/figures/teaser_fig.png" width=60% height=60%>
+<img src="https://github.com/futakw/DensityAwareCalibration/blob/master/teaser_fig.png" width=60% height=60%>
   
 DAC can be combined with any existing post-hoc calibration method $h$, leading to robust and reliable uncertainty estimates.
 DAC leverages information from feature vectors $z_1,...,z_L$ across the entire classifier $f$. DAC is based on KNN, where predictive uncertainty is expected to be high for test samples lying in low-density regions of the empirical training distribution and vice versa.
@@ -66,6 +66,7 @@ If you don't use GPU, please uninstall faiss-gpu and install faiss-cpu.
 pip3 install gdown
 gdown https://drive.google.com/uc?id=1L2rY0FM32D_xd5ERn7h4VVdPPlwoNQos
 unzip outputs.zip
+rm outputs.zip
 ```
 - 2.2. Run demo
 ```

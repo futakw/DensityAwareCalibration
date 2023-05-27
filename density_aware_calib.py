@@ -12,14 +12,8 @@ from tqdm import tqdm
 import time
 import gc
 
-# pip install faiss-cpu --no-cache
-# conda install faiss-gpu cudatoolkit=11.0 -c pytorch
-# https://github.com/facebookresearch/faiss/issues/821
 import faiss
 from sklearn.cluster import KMeans
-
-device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
-print("Device:", device)
 
 
 def np_softmax(x):
