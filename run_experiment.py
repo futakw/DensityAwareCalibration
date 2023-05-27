@@ -166,7 +166,7 @@ else:
     test_ece_1_with_DAC = test_ece_dict["ece_1"]
 print(f"- {args.combination_method} w/o DAC: test_ece_1:", test_ece_1_wo_DAC)
 print(f"- {args.combination_method} + DAC: test_ece_1:", test_ece_1_with_DAC)
-results.append(["val", test_ece_1_wo_DAC, test_ece_1_with_DAC])
+# results.append(["val", test_ece_1_wo_DAC, test_ece_1_with_DAC])
 
 # calibrate test set
 for k in test_data_type:
@@ -244,7 +244,7 @@ for k in test_data_type:
         test_ece_dict, test_nll, test_mse, test_accu = ece_eval_all_from_conf_acc(p_eval_wo_DAC, label_eval_wo_DAC)
         test_ece_1_wo_DAC = test_ece_dict["ece_1"]
         # with DAC
-        test_ece_dict, test_nll, test_mse, test_accu = ece_eval_all_from_conf_acc(p_eval, test_labels)
+        test_ece_dict, test_nll, test_mse, test_accu = ece_eval_all_from_conf_acc(p_eval, label_eval)
         test_ece_1_with_DAC = test_ece_dict["ece_1"]
     print(f"- {args.combination_method} w/o DAC: test_ece_1:", test_ece_1_wo_DAC)
     print(f"- {args.combination_method} + DAC: test_ece_1:", test_ece_1_with_DAC)

@@ -42,12 +42,6 @@ def get_layers_name(
             "avgpool",
         ]
 
-    elif "cifar100_mobilenetv2_x0_5" == model_name:
-        return_nodes = []
-        for j in range(0, 19):
-            name = f"features.{j}"
-            return_nodes.append(name)
-
     elif "resnet" in model_name:
         return_nodes = [
             "maxpool",

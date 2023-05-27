@@ -248,27 +248,6 @@ def combine_batch_data(args, split):
                 gc.collect()
             shutil.rmtree(this_save_feats_d, ignore_errors=True)
 
-
-def save_normal_format(args):
-    """
-    Save outputs and labels in normal format of,
-        data = ((logits, labels), (logits_eval, labels_eval))
-    """
-    save_d = os.path.join(args.save_outputs_dir, "val")
-    logits = load_pickle(os.path.join(save_d, "outputs.pickle"))
-    labels = load_pickle(os.path.join(save_d, "labels.pickle"))
-
-    save_d = os.path.join(args.save_outputs_dir, "test")
-    logits_eval = load_pickle(os.path.join(save_d, "outputs.pickle"))
-    labels_eval = load_pickle(os.path.join(save_d, "labels.pickle"))
-
-    data = ((logits, labels), (logits_eval, labels_eval))
-    save_p = os.path.join(args.save_outputs_dir, "normal_format.pickle")
-    save_pickle(save_p, data)
-
-    return data
-
-
 def save_ood_values(args, split, data):
     name = "ood_score"
     if args.save_dist_arr:
@@ -298,6 +277,7 @@ if __name__ == "__main__":
     import argparse
     from utils.dataset import get_loaders
     from constants import get_layers_name
+    from utils.get_models import get_model
 
     parser = argparse.ArgumentParser(description="")
     # dataset
@@ -306,22 +286,42 @@ if __name__ == "__main__":
     parser.add_argument("--dataset", type=str, default="cifar10")
     # model
     parser.add_argument("--model_name", type=str, default="resnet18")
+    parser.add_argument("--model_path", type=str, default="")
     # save args
-    parser.add_argument("--top_k", type=int, default=10)
+    parser.add_argument("--save_outputs_root_dir", type=str, default="outputs")
+    parser.add_argument("--top_k", type=int, default=50)
     parser.add_argument("--is_all_layers", type=str2bool, default=False)
     parser.add_argument("--save_only_ood_scores", type=str2bool, default=True)
     parser.add_argument("--save_dist_arr", type=str2bool, default=False)
     parser.add_argument("--end_ratio", type=float, default=1.0)
     parser.add_argument("--save_batch_interval", type=int, default=100)
-    parser.add_argument("--corruption", type=str2bool, default=True)
     parser.add_argument(
         "--test_data_type", type=str, nargs="*", 
-        default=["natural", "gaussian_noise"]
+        default=[],
+        choices=[
+            "natural",
+            "gaussian_noise",
+            "shot_noise",
+            "speckle_noise",
+            "impulse_noise",
+            "defocus_blur",
+            "gaussian_blur",
+            "motion_blur",
+            "zoom_blur",
+            "snow",
+            "fog",
+            "brightness",
+            "contrast",
+            "elastic_transform",
+            "pixelate",
+            "jpeg_compression",
+            "spatter",
+            "saturate",
+            "frost",
+        ]
     )
 
     args = parser.parse_args()
-
-    from utils.get_models import *
 
     if args.dataset == "imagenet":
         args.num_classes = c = 1000
@@ -336,32 +336,31 @@ if __name__ == "__main__":
     else:
         raise ValueError
 
-    ###### get data ########
+    print("\n===============")
+    print("Dataset: ", args.dataset)
+    print("Model: ", args.model_name)
+    print("Top k for KNN score: ", args.top_k)
+    print("Ratio of train set to use: ", args.end_ratio)
+    print("===============\n")
+
+
+    ###### Get dataloader ########
     train_loader, val_loader, test_loader = get_loaders(
         name=args.dataset,
         batch_size=args.batch_size,
         train_no_aug=True,  # important
     )
-
-    args.save_outputs_dir = f"outputs/{args.dataset}/{args.model_name}"
+    root_dir = args.save_outputs_root_dir
+    args.save_outputs_dir = os.path.join(root_dir, f"{args.dataset}/{args.model_name}")
     os.makedirs(args.save_outputs_dir, exist_ok=True)
 
-    # load model
-    if "cifar" in args.dataset:
-        # load classifier
-        model = get_model(
-            args.model_name,
-            args.num_classes,
-        )
-        p = f"ckpts/{args.dataset}/{args.model_name}.pth"
-        checkpoint = torch.load(p)
-        model.load_state_dict(checkpoint["state_dict"])
-        model.to(device)
-        print("loaded model weights: ", p)
-    else:
-        raise NotImplementedError
+    ###### load classifier ########
+    model = get_model(args.model_name, args.num_classes)
+    model.load_state_dict(torch.load(args.model_path)["state_dict"])
+    model.to(device)
+    print("loaded model weights: ", args.model_path)
 
-    # Feature extractor
+    ###### Feature Extractor ########
     if args.is_all_layers:
         return_nodes = get_layers_name(
             args.model_name, model=model, get_all=True, add_logits=True
@@ -370,30 +369,24 @@ if __name__ == "__main__":
     else:
         return_nodes = get_layers_name(args.model_name, model=model, add_logits=True)
         feature_extractor = FeatureExtractor(model, return_nodes)
-    if isinstance(return_nodes, dict):
-        layers_name = [v for k, v in return_nodes.items()]
-    else:
-        layers_name = return_nodes
+    layers_name = [v for k, v in return_nodes.items()] if isinstance(return_nodes, dict) else return_nodes
 
     if torch.cuda.device_count() >= 2:
-        model = torch.nn.DataParallel(model).cuda()
         feature_extractor = torch.nn.DataParallel(feature_extractor).cuda()
 
-    # train
+    ###### Extract features and save KNN scores ########
+    # for train set
     start_time = time.time()
-
     split = "train"
-    loader = train_loader
     extract_features_and_save_ood_scores(
         args,
         split,
-        loader,
+        train_loader,
         feature_extractor,
-        to_save_features=True,
+        to_save_features=True, # need to save features for train set
         ood_scorer=None,
         save_batch_interval=args.save_batch_interval,
     )
-
     end_time = time.time()
     print(f"- Train feature extraction: {end_time - start_time} seconds")
 
@@ -407,7 +400,7 @@ if __name__ == "__main__":
         print("Set train features to ood_scorer: {}, {}".format(layer, train_feat.shape))
         ood_scorer.set_train_feat(train_feat, train_labels, args.num_classes)
 
-    # val, test
+    # for val, test set
     for split, loader in zip(["val", "test"], [val_loader, test_loader]):
         print("Save OOD scores: ", split)
         ood_score_dict = extract_features_and_save_ood_scores(
@@ -420,64 +413,30 @@ if __name__ == "__main__":
             save_batch_interval=args.save_batch_interval,
         )
 
-    ((logits, labels), (logits_eval, labels_eval)) = save_normal_format(args)
+    # for corruption data
+    assert args.dataset in ["cifar10", "cifar100", "imagenet"]
 
-    ###### CORRUPTION DATA
-    if args.corruption:
-        assert args.dataset in ["cifar10", "cifar100", "imagenet"]
+    test_corruptions = args.test_data_type
+    severities = [1, 2, 3, 4, 5]
 
-        # test_corruptions = [
-        #     "natural",
-        #     "gaussian_noise",
-        #     "shot_noise",
-        #     "speckle_noise",
-        #     "impulse_noise",
-        #     "defocus_blur",
-        #     "gaussian_blur",
-        #     "motion_blur",
-        #     "zoom_blur",
-        #     "snow",
-        #     "fog",
-        #     "brightness",
-        #     "contrast",
-        #     "elastic_transform",
-        #     "pixelate",
-        #     "jpeg_compression",
-        #     "spatter",
-        #     "saturate",
-        #     "frost",
-        # ]
-        test_corruptions = args.test_data_type
-        severities = [1, 2, 3, 4, 5]
+    for ci, cname in enumerate(test_corruptions):
+        for severity in severities:
+            cname_s = f"{cname}_{severity}"
+            print("Save OOD scores: ", cname_s)
 
-        for ci, cname in enumerate(test_corruptions):
-            for severity in severities:
-                cname_s = f"{cname}_{severity}"
-                print("Save OOD scores: ", cname_s)
+            loader = get_loaders(
+                f"{args.dataset}c",
+                cname=cname,
+                batch_size=args.batch_size,
+                severity=severity,
+            )
 
-                loader = get_loaders(
-                    f"{args.dataset}c",
-                    cname=cname,
-                    batch_size=args.batch_size,
-                    severity=severity,
-                )
-
-                ood_score_dict = extract_features_and_save_ood_scores(
-                    args,
-                    cname_s,
-                    loader,
-                    feature_extractor,
-                    to_save_features=False,
-                    ood_scorer=ood_scorer,
-                    save_batch_interval=args.save_batch_interval,
-                )
-
-                save_p = os.path.join(
-                    args.save_outputs_dir, f"{cname_s}_normal_format.pickle"
-                )
-                save_d = os.path.join(args.save_outputs_dir, cname_s)
-                logits_eval = load_pickle(os.path.join(save_d, "outputs.pickle"))
-                labels_eval = load_pickle(os.path.join(save_d, "labels.pickle"))
-
-                data = ((logits, labels), (logits_eval, labels_eval))
-                save_pickle(save_p, data)
+            ood_score_dict = extract_features_and_save_ood_scores(
+                args,
+                cname_s,
+                loader,
+                feature_extractor,
+                to_save_features=False,
+                ood_scorer=ood_scorer,
+                save_batch_interval=args.save_batch_interval,
+            )

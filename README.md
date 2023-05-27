@@ -1,19 +1,50 @@
-# Density Aware Calibration (official)
-This is an official implementation Density-Aware Calibration (DAC).
-This method is presented in the paper "Beyond In-Domain Scenarios: Robust Density-Aware Calibration.", ICML 2023. 
+# Density-Aware Calibration, ICML 2023 (official implementation)
+Official implementation of Density-Aware Calibration (DAC), presented in,
+
+"Beyond In-Domain Scenarios: Robust Density-Aware Calibration.", ICML 2023. 
+
 (arXiv link: https://arxiv.org/abs/2302.05118)
 
-If you find this repository useful, please cite our paper.
+### Cite our paper
+If you find this repository useful, please cite our paper:
 ```
 @article{tomani_waseda2023beyond,
   title={Beyond In-Domain Scenarios: Robust Density-Aware Calibration},
   author={Tomani, Christian and Waseda, Futa and Shen, Yuesong and Cremers, Daniel},
-  journal={ICML 2023},
+  journal={ICML},
   year={2023}
 }
 ```
 
-# Set up
+### DAC boosts the calibration performance of the existing post-hoc calibration methods, especially in the domain-shift scenario.
+In this repo, you can reproduce the following results.
+
+Expected results for CIFAR10, ResNet18:
+- Comparison of ETS and ETS + DAC.
+"""
+(ECE, the lower the better)
++----+------------------+---------------+-------------+ 
+|    | test data        |   ETS w/o DAC |   ETS + DAC |
+|----+------------------+---------------+-------------|
+|  0 | natural_1        |    0.0140503  |  0.00914035 |
+|  1 | gaussian_noise_3 |    0.049552   |  0.0417358  |
+|  2 | gaussian_noise_5 |    0.0895087  |  0.0737432  |
++----+------------------+---------------+-------------+
+"""
+- Comparison of SPL and SPL + DAC.
+"""
+(ECE, the lower the better)
++----+------------------+---------------+-------------+ 
+|    | test data        |   SPL w/o DAC |   SPL + DAC |
+|----+------------------+---------------+-------------|
+|  0 | natural_1        |     0.0212603 |  0.0110497  |
+|  1 | gaussian_noise_3 |     0.0626791 |  0.0462725  |
+|  2 | gaussian_noise_5 |     0.100395  |  0.0818528  |
++----+------------------+---------------+-------------+
+"""
+
+# Usage
+## Environment set up
 ```
 python3 -m venv venv
 source venv/bin/activate
@@ -24,51 +55,72 @@ Note:
 By default faiss-gpu is installed, which requires GPU resource. 
 If you don't use GPU, please uninstall faiss-gpu and install faiss-cpu.
 
-# Run Demo: CIFAR10, ResNet18
-## Quick Start: Download features + run DAC
-1. Download example features from google drive (4GB)
+## Run Demo: CIFAR10, ResNet18
+### 1. Quick Start: Download features + run DAC
+1.1. Download example features from google drive (4GB)
 ```
 pip3 install gdown
 gdown https://drive.google.com/uc?id=1aAMlTQUqjiBnUT814_nOT-z2sFwDi7l9
 unzip outputs.zip
 ```
-2. run demo
+2.2. run demo
 ```
 source venv/bin/activate
-bash demo.sh
+bash scripts/quick_comparison_DAC_vs_ETS.sh
+(bash scripts/quick_comparison_DAC_vs_SPL.sh)
 ```
 This compares ETS vs ETS+DAC for CIFAR10-ResNet18.
 (Also SPL vs SPL+DAC by changing arguments)
 
-Expected results:
-Calibration performance on test set: gaussian_noise_5
-- ETS w/o DAC: test_ece_1: 0.08950865
-- ETS + DAC: test_ece_1: 0.07374325
-
-## Whole pipeline: Extract features + run DAC
-1. Download CIFAR-10-C dataset from https://zenodo.org/record/2535967
+### 2. Whole pipeline: Extract features + run DAC
+2.1. Download CIFAR-10-C dataset from https://zenodo.org/record/2535967
 ```
 cd data
 wget -O CIFAR-10-C.tar https://zenodo.org/record/2535967/files/CIFAR-10-C.tar?download=1
 tar -xvf CIFAR-10-C.tar
 ```
-2. 
+2.2. Extract features + run DAC
+```
+source venv/bin/activate
+bash scripts/whole_pipeline.sh
+```
+
+### 3. Inference pipeline: 
 
 
-## Inference pipeline: 
 
-
-
-# Structure
+# Structure of this repository
 - density_aware_calib.py: Our method is here.
 - utils: Some codes imported from others, and modified.
     - Evaluation codes, ETS: from https://github.com/zhang64-llnl/Mix-n-Match-Calibration
     - SPL: from https://github.com/kartikgupta-at-anu/spline-calibration
 
-# Note:
-To run experiments, features, outputs (logits), labels from the classifier should be stored as, for example,
+# Note: structure of saved features/ood_score, outputs, and labels
+extract_feature_and_knn_score.py:
+    features/ood_score, outputs (logits), labels from the classifier will be saved in the following structure.
 ```
-Features: outputs/{dataset_name}/{classifier_name}/{data_type}/features/{layer_name}.pickle
-Logits: outputs/{dataset_name}/{classifier_name}/{data_type}/outputs.pickle
-Labels: outputs/{dataset_name}/{classifier_name}/{data_type}/labels.pickle
+- outputs
+    - {dataset_name}
+        - {classifier_name}
+            - train # used for KNN scoring.
+                - features
+                    - {layer_name_1}.pickle
+                    - {layer_name_2}.pickle
+                    - ...
+                outputs.pickle # logits
+                labels.pickl # labels
+            - val # used for calibration optimization
+                - ood_score # Optionally, "features" or "ood_score_arr"
+                    - {layer_name_1}.pickle
+                    - {layer_name_2}.pickle
+                    - ...
+                outputs.pickle # logits
+                labels.pickl # labels
+            - {test_data_name}
+                - ood_score # Optionally, "features" or "ood_score_arr"
+                    - {layer_name_1}.pickle
+                    - {layer_name_2}.pickle
+                    - ...
+                outputs.pickle # logits
+                labels.pickl # labels
 ```

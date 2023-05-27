@@ -1,5 +1,4 @@
 outputs/*
-ckpts/*
 data/*
 venv
 *.pickle
