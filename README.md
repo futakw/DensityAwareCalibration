@@ -12,6 +12,7 @@ DAC leverages information from feature vectors $z_1,...,z_L$ across the entire c
 
 ### Reproducible results from this repo.
 In this repo, you can reproduce the following results for calibration of CIFAR10, ResNet18:
+We combine DAC with [ETS](https://github.com/zhang64-llnl/Mix-n-Match-Calibration) and [SPL](https://github.com/kartikgupta-at-anu/spline-calibration).
 - ETS vs. ETS+DAC (ours).
 ```
 (ECE, the lower the better)
@@ -60,13 +61,13 @@ If you don't use GPU, please uninstall faiss-gpu and install faiss-cpu.
 
 ## Run Demo: CIFAR10, ResNet18
 ### 1. Quick Start: Download features + run DAC
-1.1. Download example features from google drive (4GB)
+- 1.1. Download example features from google drive (4GB)
 ```
 pip3 install gdown
 gdown https://drive.google.com/uc?id=1aAMlTQUqjiBnUT814_nOT-z2sFwDi7l9
 unzip outputs.zip
 ```
-2.2. run demo
+- 2.2. run demo
 ```
 source venv/bin/activate
 bash scripts/quick_comparison_DAC_vs_ETS.sh
@@ -76,13 +77,13 @@ This compares ETS vs ETS+DAC for CIFAR10-ResNet18.
 (Also SPL vs SPL+DAC by changing arguments)
 
 ### 2. Whole pipeline: Extract features + run DAC
-2.1. Download CIFAR-10-C dataset from https://zenodo.org/record/2535967
+- 2.1. Download CIFAR-10-C dataset from https://zenodo.org/record/2535967
 ```
 cd data
 wget -O CIFAR-10-C.tar https://zenodo.org/record/2535967/files/CIFAR-10-C.tar?download=1
 tar -xvf CIFAR-10-C.tar
 ```
-2.2. Extract features + run DAC
+- 2.2. Extract features + run DAC
 ```
 source venv/bin/activate
 bash scripts/whole_pipeline.sh
