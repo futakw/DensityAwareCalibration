@@ -1,17 +1,17 @@
-# Density-Aware Calibration [ICML 2023] (official by author)
-Official implementation of Density-Aware Calibration (DAC) presented in, "Beyond In-Domain Scenarios: Robust Density-Aware Calibration.", ICML 2023. 
+# Density-Aware Calibration [ICML 2023] (official)
+Official implementation of **Density-Aware Calibration (DAC)** presented in, 
+
+"Beyond In-Domain Scenarios: Robust Density-Aware Calibration.", **ICML 2023**. 
 (arXiv: https://arxiv.org/abs/2302.05118)
 
 ### Approach
-![fig1](https://github.com/futakw/DensityAwareCalibraion/blob/master/figures/teaser_fig.png?raw=true)
-
-DAC boosts the calibration performance of the existing post-hoc calibration methods, especially in the domain-shift scenario.
+<img src="https://github.com/futakw/DensityAwareCalibration/blob/master/figures/teaser_fig.png" width=40% height=40%>
+  
+DAC can be combined with any existing post-hoc calibration method $h$, leading to robust and reliable uncertainty estimates.
 DAC leverages information from feature vectors $z_1,...,z_L$ across the entire classifier $f$. DAC is based on KNN, where predictive uncertainty is expected to be high for test samples lying in low-density regions of the empirical training distribution and vice versa.
 
-
-In this repo, you can reproduce the following results.
-
-Calibration results for CIFAR10, ResNet18:
+### Reproducible results from this repo.
+In this repo, you can reproduce the following results for calibration of CIFAR10, ResNet18:
 - ETS vs. ETS+DAC (ours).
 ```
 (ECE, the lower the better)
@@ -98,9 +98,8 @@ bash scripts/whole_pipeline.sh
     - Evaluation codes, ETS: from https://github.com/zhang64-llnl/Mix-n-Match-Calibration
     - SPL: from https://github.com/kartikgupta-at-anu/spline-calibration
 
-# Note: structure of saved features/ood_score, outputs, and labels
-extract_feature_and_knn_score.py:
-    features/ood_score, outputs (logits), labels from the classifier will be saved in the following structure.
+# Note: 
+features/ood_score, outputs (logits), labels from the classifier will be saved in the following structure, by running _extract_feature_and_knn_score.py_:
 ```
 - outputs
     - {dataset_name}
