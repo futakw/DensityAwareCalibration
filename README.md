@@ -78,9 +78,9 @@ This compares ETS vs ETS+DAC for CIFAR10-ResNet18.
 ### 2. Whole pipeline: Extract features + run DAC
 - 2.1. Download CIFAR-10-C dataset from https://zenodo.org/record/2535967
 ```
-cd data
-wget -O CIFAR-10-C.tar https://zenodo.org/record/2535967/files/CIFAR-10-C.tar?download=1
-tar -xvf CIFAR-10-C.tar
+mkdir data
+wget -O data/CIFAR-10-C.tar https://zenodo.org/record/2535967/files/CIFAR-10-C.tar?download=1
+tar -xvf data/CIFAR-10-C.tar -C data
 ```
 - 2.2. Extract features + run DAC
 ```
