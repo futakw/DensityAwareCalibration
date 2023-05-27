@@ -19,8 +19,7 @@ import copy
 
 
 def get_model(arch, class_num, pretrained=False):
-    # https://github.com/kuangliu/pytorch-cifar
-    # resnet
+    # pytorch resnet
     if arch == 'resnet18':
         model = models.resnet18(pretrained=pretrained, num_classes=class_num)
     if arch == 'resnet34':
@@ -33,7 +32,7 @@ def get_model(arch, class_num, pretrained=False):
         model = models.resnext101(pretrained=pretrained, num_classes=class_num)
     elif arch == 'resnet152':
         model = models.resnet152(pretrained=pretrained, num_classes=class_num)
-    # vgg
+    # pytorch vgg
     elif arch == 'vgg11':
         model = models.vgg11(pretrained=pretrained, num_classes=class_num)
     elif arch == 'vgg13':
@@ -46,7 +45,13 @@ def get_model(arch, class_num, pretrained=False):
         model = models.vgg19(pretrained=pretrained, num_classes=class_num)
     elif arch == 'vgg19_bn':
         model = models.vgg19_bn(pretrained=pretrained, num_classes=class_num)
-
+    # pytorch densenet
+    elif arch == "densenet121":
+        model = models.densenet121(pretrained=pretrained, num_classes=class_num)
+    elif arch == "densenet169":
+        model = models.densenet169(pretrained=pretrained, num_classes=class_num)
+    
+    # https://github.com/kuangliu/pytorch-cifar
     elif arch == "cifar10_resnet18":
         sys.path.append("../pytorch-cifar/models")
         from resnet import ResNet18
@@ -62,7 +67,8 @@ def get_model(arch, class_num, pretrained=False):
         from densenet import densenet_cifar
 
         model = densenet_cifar()
-    #
+        
+    # https://github.com/weiaicunzai/pytorch-cifar100
     elif arch == "cifar100_resnet18":
         sys.path.append("pytorch-cifar100/models")
         from resnet import resnet18
@@ -78,11 +84,8 @@ def get_model(arch, class_num, pretrained=False):
         from densenet import densenet121
 
         model = densenet121()
-    # densenet
-    elif arch == "densenet121":
-        model = models.densenet121(pretrained=pretrained, num_classes=class_num)
-    elif arch == "densenet169":
-        model = models.densenet169(pretrained=pretrained, num_classes=class_num)
+    
+    # timm models
     elif arch == "xception":
         model = timm.create_model(
             "xception", pretrained=pretrained, num_classes=class_num
