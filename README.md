@@ -1,10 +1,10 @@
-# Density-Aware Calibration, ICML 2023 (official from author)
-Official implementation of Density-Aware Calibration (DAC), presented in, "Beyond In-Domain Scenarios: Robust Density-Aware Calibration.", ICML 2023. 
+# Density-Aware Calibration [ICML 2023] (official by author)
+Official implementation of Density-Aware Calibration (DAC) presented in, "Beyond In-Domain Scenarios: Robust Density-Aware Calibration.", ICML 2023. 
 (arXiv: https://arxiv.org/abs/2302.05118)
 
 ### Approach
-![fig1](https://github.com/futakw/DensityAwareCalibtaion/blob/master/figures/teaser_fig_1.png)
-![fig2](https://github.com/futakw/DensityAwareCalibtaion/blob/master/figures/teaser_fig_2.png)
+![fig1](https://github.com/futakw/DensityAwareCalibtaion/blob/master/figures/teaser_fig_1.pdf?raw=true)
+![fig2](https://github.com/futakw/DensityAwareCalibtaion/blob/master/figures/teaser_fig_2.pdf?raw=true)
 
 DAC boosts the calibration performance of the existing post-hoc calibration methods, especially in the domain-shift scenario.
 DAC leverages information from feature vectors $z_1,...,z_L$ across the entire classifier $f$. DAC is based on KNN, where predictive uncertainty is expected to be high for test samples lying in low-density regions of the empirical training distribution and vice versa.
