@@ -81,7 +81,7 @@ This compares ETS vs ETS+DAC for CIFAR10-ResNet18.
 ```
 mkdir data
 wget -O data/CIFAR-10-C.tar https://zenodo.org/record/2535967/files/CIFAR-10-C.tar?download=1
-tar -xvf data/CIFAR-10-C.tar
+tar -xvf data/CIFAR-10-C.tar -C data
 ```
 - 2.2. Extract features + run DAC
 ```
