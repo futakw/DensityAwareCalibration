@@ -61,13 +61,13 @@ If you don't use GPU, please uninstall faiss-gpu and install faiss-cpu.
 
 ## Run Demo: CIFAR10, ResNet18
 ### 1. Quick Start: Download features + run DAC
-- 1.1. Download example features from google drive (4GB)
+- 1.1. Download example features from google drive (187.4 MB)
 ```
 pip3 install gdown
-gdown https://drive.google.com/uc?id=1aAMlTQUqjiBnUT814_nOT-z2sFwDi7l9
+gdown https://drive.google.com/uc?id=1L2rY0FM32D_xd5ERn7h4VVdPPlwoNQos
 unzip outputs.zip
 ```
-- 2.2. run demo
+- 2.2. Run demo
 ```
 source venv/bin/activate
 bash scripts/quick_comparison_DAC_vs_ETS.sh
@@ -87,6 +87,7 @@ tar -xvf data/CIFAR-10-C.tar -C data
 source venv/bin/activate
 bash scripts/whole_pipeline.sh
 ```
+("bash scripts/whole_pipeline_all.sh" to extract features for all corruption data)
 
 ### Structure of this repository
 - density_aware_calib.py: Our method is here.
