@@ -1,13 +1,13 @@
 # Density-Aware Calibration [ICML 2023] (official)
 Official implementation of **Density-Aware Calibration (DAC)** presented in, 
+["Beyond In-Domain Scenarios: Robust Density-Aware Calibration."](https://arxiv.org/abs/2302.05118), **ICML 2023**. 
 
-"Beyond In-Domain Scenarios: Robust Density-Aware Calibration.", **ICML 2023**. 
-(arXiv: https://arxiv.org/abs/2302.05118)
 
 ### Approach
 <img src="https://github.com/futakw/DensityAwareCalibration/blob/master/teaser_fig.png" width=60% height=60%>
   
-DAC can be combined with any existing post-hoc calibration method $h$, leading to robust and reliable uncertainty estimates.
+DAC can be combined with any existing post-hoc calibration method $h$, leading to robust and reliable uncertainty estimates, especially under domain-shift scenarios.
+
 DAC leverages information from feature vectors $z_1,...,z_L$ across the entire classifier $f$. DAC is based on KNN, where predictive uncertainty is expected to be high for test samples lying in low-density regions of the empirical training distribution and vice versa.
 
 ### Reproducible results from this repo.
@@ -36,7 +36,7 @@ We combine DAC with [ETS](https://github.com/zhang64-llnl/Mix-n-Match-Calibratio
 +----+------------------+---------------+-------------+
 ```
 
-### Cite our paper
+### Citation
 If you find this repository useful, please cite our paper:
 ```
 @article{tomani_waseda2023beyond,
@@ -92,13 +92,13 @@ bash scripts/whole_pipeline.sh
 
 ## Structure of this repository
 - density_aware_calib.py: Our method is here.
-- utils: Some codes imported from other repos and modified.
+- utils: Some codes imported and modified from other repos.
     - Evaluation codes, ETS: from https://github.com/zhang64-llnl/Mix-n-Match-Calibration
     - SPL: from https://github.com/kartikgupta-at-anu/spline-calibration
 
 
 ## Note: 
-features/ood_score, outputs (logits), labels from the classifier will be saved in the following structure, by running _extract_feature_and_knn_score.py_:
+features/ood_score, outputs (logits), labels from a classifier will be saved in the following structure, by running _extract_feature_and_knn_score.py_:
 ```
 - outputs
     - {dataset_name}
