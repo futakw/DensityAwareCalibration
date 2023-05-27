@@ -71,10 +71,9 @@ unzip outputs.zip
 ```
 source venv/bin/activate
 bash scripts/quick_comparison_DAC_vs_ETS.sh
-(bash scripts/quick_comparison_DAC_vs_SPL.sh)
 ```
 This compares ETS vs ETS+DAC for CIFAR10-ResNet18.
-(Also SPL vs SPL+DAC by changing arguments)
+(SPL vs SPL+DAC, by "bash scripts/quick_comparison_DAC_vs_SPL.sh")
 
 ### 2. Whole pipeline: Extract features + run DAC
 - 2.1. Download CIFAR-10-C dataset from https://zenodo.org/record/2535967
@@ -95,7 +94,7 @@ bash scripts/whole_pipeline.sh
 
 # Structure of this repository
 - density_aware_calib.py: Our method is here.
-- utils: Some codes imported from others, and modified.
+- utils: Some codes imported from other repos and modified.
     - Evaluation codes, ETS: from https://github.com/zhang64-llnl/Mix-n-Match-Calibration
     - SPL: from https://github.com/kartikgupta-at-anu/spline-calibration
 

@@ -347,6 +347,7 @@ if __name__ == "__main__":
     ###### Get dataloader ########
     train_loader, val_loader, test_loader = get_loaders(
         name=args.dataset,
+        data_root=args.data_root,
         batch_size=args.batch_size,
         train_no_aug=True,  # important
     )
