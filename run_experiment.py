@@ -7,7 +7,7 @@ import pandas as pd
 from tqdm import tqdm
 from tabulate import tabulate
 
-from utils.utils import softmax, calc_acc, label2onehot
+from utils.utils import softmax, calc_acc, label2onehot, softmax
 from utils.io_utils import load_pickle, save_pickle
 from utils.util_calibration import (
     ts_calibrate,
@@ -60,6 +60,9 @@ args.train_data_ratio = hyperparams[args.dataset]["train_data_ratio"]
 
 args.ood_values_num = len(args.ood_scoring_layers_list)
 test_data_type = args.test_data_type
+if "all" in test_data_type:
+    from constants.test_data_type import all_test_data_type
+    test_data_type = all_test_data_type
 
 ###### Prepare KNN score calculator ######
 print("\nPrepare KNN score calculator.")
@@ -116,6 +119,7 @@ elif args.save_outputs_type == "ood_score_arr":
         val_ood_scores.append(ood_score)
 
 # optimize DAC
+# inputs should be outputs before softmax
 DAC_calibrator = DAC(ood_values_num=args.ood_values_num)
 optim_params = DAC_calibrator.optimize(
     val_outputs, val_labels, val_ood_scores, loss="mse"
@@ -126,19 +130,21 @@ results = []
 
 # calibrate on validation set
 print("\n------------------\nCalibrate on validation set.")
-val_calib_logits = DAC_calibrator.calibrate_before_softmax(
+val_calib_outputs = DAC_calibrator.calibrate_before_softmax(
     val_outputs, val_ood_scores
 )
 if args.combination_method == "ETS":
+    # inputs should be outputs before softmax
     # without DAC
     p_wo_DAC = ets_calibrate(val_outputs, val_labels, val_outputs, args.num_classes, "mse")
     # with DAC
-    p = ets_calibrate(val_calib_logits, val_labels, val_calib_logits, args.num_classes, "mse")
+    p = ets_calibrate(val_calib_outputs, val_labels, val_calib_outputs, args.num_classes, "mse")
 elif args.combination_method == "SPL":
+    # inputs should be outputs before softmax
     # without DAC
     SPL_frecal, p_wo_DAC, label_wo_DAC = get_spline_calib_func(val_outputs, val_labels)
     # with DAC
-    SPL_DAC_frecal, p, label = get_spline_calib_func(val_calib_logits, val_labels)
+    SPL_DAC_frecal, p, label = get_spline_calib_func(val_calib_outputs, val_labels)
 else:
     raise NotImplementedError
 
@@ -171,8 +177,12 @@ for k in test_data_type:
     test_labels = load_pickle(os.path.join(test_save_d, "labels.pickle"))
     test_labels = label2onehot(test_labels, n_class=args.num_classes)
     test_outputs = load_pickle(os.path.join(test_save_d, "outputs.pickle"))
-    acc = calc_acc(test_outputs, test_labels)
-    print(f"Test Acc ({k}): ", acc)
+
+    # before calib
+    test_ece_dict, test_nll, test_mse, test_accu = ece_eval_all(softmax(test_outputs), test_labels)
+    test_ece_1_uncal = test_ece_dict["ece_1"]
+    print(f"Test Acc ({k}): ", test_accu)
+
     print(f"Calculating knn scores on test set ({k})...")
     if args.save_outputs_type == "feature":
         print("\nCalculating knn scores on validation set...")
@@ -202,22 +212,24 @@ for k in test_data_type:
 
     # calibrate
     print(f"Calibrating ({k})...")
-    calib_logits_eval = DAC_calibrator.calibrate_before_softmax(
+    calib_outputs_eval = DAC_calibrator.calibrate_before_softmax(
         test_outputs, test_ood_scores
     )
     if args.combination_method == "ETS":
+        # inputs should be outputs before softmax
         p_eval_wo_DAC = ets_calibrate(
             val_outputs, val_labels, test_outputs, args.num_classes, "mse"
         )
         p_eval = ets_calibrate(
-            val_calib_logits, val_labels, calib_logits_eval, args.num_classes, "mse"
+            val_calib_outputs, val_labels, calib_outputs_eval, args.num_classes, "mse"
         )
     elif args.combination_method == "SPL":
+        # inputs should be outputs before softmax
         p_eval_wo_DAC, label_eval_wo_DAC = spline_calibrate(
             SPL_frecal, test_outputs, test_labels
         )
         p_eval, label_eval = spline_calibrate(
-            SPL_DAC_frecal, calib_logits_eval, test_labels
+            SPL_DAC_frecal, calib_outputs_eval, test_labels
         )
     else:
         raise NotImplementedError
@@ -242,11 +254,39 @@ for k in test_data_type:
         test_ece_1_with_DAC = test_ece_dict["ece_1"]
     print(f"- {args.combination_method} w/o DAC: test_ece_1:", test_ece_1_wo_DAC)
     print(f"- {args.combination_method} + DAC: test_ece_1:", test_ece_1_with_DAC)
-    results.append([k, test_ece_1_wo_DAC, test_ece_1_with_DAC])
+    results.append([k, test_ece_1_uncal, test_ece_1_wo_DAC, test_ece_1_with_DAC])
 
 
+names = ["Uncal.",f"{args.combination_method} w/o DAC", f"{args.combination_method} + DAC"]
+columns = ["test data"] + names
 df = pd.DataFrame(
     data=results, 
-    columns=["test data", f"{args.combination_method} w/o DAC", f"{args.combination_method} + DAC"]
+    columns=columns
 )
+print('ECE')
 print(tabulate(df, headers='keys', tablefmt='psql'))
+
+os.makedirs("results", exist_ok=True)
+df.to_csv(f"results/DAC+{args.combination_method}_results.csv", index=False)
+
+df["corruption"] = df["test data"].apply(lambda x: x.replace(f"_{x.split('_')[-1]}", ""))
+df["severity"] = df["test data"].apply(lambda x: x.split("_")[-1])
+df.drop(columns=["test data"], inplace=True)
+
+n = len(names)
+nat_metric = df[df["corruption"] == "natural"].mean().values[:n]
+
+df = df[df["corruption"] != "natural"]
+corrupt_metrics = []
+for s in [ "1", "2", "3", "4", "5"]:
+    corrupt_metrics.append(df[df["severity"] == s].mean().values[:n])
+mean_df = pd.DataFrame(
+    data=np.array([nat_metric] + corrupt_metrics).reshape(-1, n).T,
+    columns=["natural", "Sev.1", "Sev.2", "Sev.3", "Sev.4", "Sev.5"],
+    index=names,
+)
+mean_df["ALL"] = mean_df.mean(axis=1)
+ 
+print('ECE')
+print(tabulate(mean_df, headers='keys', tablefmt='psql'))
+mean_df.to_csv(f"results/DAC+{args.combination_method}_results_mean.csv", index=False)

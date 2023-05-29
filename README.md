@@ -2,7 +2,6 @@
 Official implementation of **Density-Aware Calibration (DAC)** presented in, 
 ["Beyond In-Domain Scenarios: Robust Density-Aware Calibration."](https://arxiv.org/abs/2302.05118), **ICML 2023**. 
 
-
 ### Approach
 <img src="https://github.com/futakw/DensityAwareCalibration/blob/master/teaser_fig.png" width=60% height=60%>
   

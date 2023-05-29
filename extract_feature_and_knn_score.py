@@ -65,9 +65,10 @@ def extract_features_and_save_ood_scores(
     if to_save_features:
         os.makedirs(save_features_d, exist_ok=True)
 
-    if os.path.exists(os.path.join(save_d, f"outputs.pickle")):
-        print(f"Already extracted features: ", split)
-        return
+    if not args.force_save:
+        if os.path.exists(os.path.join(save_d, f"outputs.pickle")):
+            print(f"Already extracted features: ", split)
+            return
 
     # eval mode
     feature_extractor.eval()
@@ -175,7 +176,7 @@ def combine_batch_data(args, split):
     save_labels_d = os.path.join(save_d, "labels")
     save_features_d = os.path.join(save_d, "features")
 
-    if os.path.exists(os.path.join(save_d, "outputs.pickle")):
+    if not args.force_save and os.path.exists(os.path.join(save_d, "outputs.pickle")):
         print("outputs.pickle already exist.")
     else:
         outputs = []
@@ -192,7 +193,7 @@ def combine_batch_data(args, split):
         gc.collect()
     shutil.rmtree(save_outputs_d, ignore_errors=True)
 
-    if os.path.exists(os.path.join(save_d, "labels.pickle")):
+    if not args.force_save and os.path.exists(os.path.join(save_d, "labels.pickle")):
         print("labels.pickle already exist.")
     else:
         labels = []
@@ -215,7 +216,7 @@ def combine_batch_data(args, split):
         labels = np.argmax(labels, 1)
     correct = np.argmax(outputs, 1) == labels
     acc = np.array(correct).mean()
-    print("Acc: ", acc)
+    print(f"Acc ({split}): ", acc)
     if split in ["train", "val", "test"] and acc < 0.50:
         print("Something wrong with accuracy!")
         print(outputs)
@@ -223,7 +224,7 @@ def combine_batch_data(args, split):
         print(labels)
         exit()
 
-    if (not args.save_only_ood_scores) or (split == "train"):
+    if not args.force_save and ((not args.save_only_ood_scores) or (split == "train")):
         feat_list = glob.glob(os.path.join(save_features_d, "*"))
         feat_list = [f.split("/")[-1].replace(".pickle", "") for f in feat_list]
         for k in feat_list:
@@ -288,6 +289,7 @@ if __name__ == "__main__":
     parser.add_argument("--model_name", type=str, default="resnet18")
     parser.add_argument("--model_path", type=str, default="")
     # save args
+    parser.add_argument("--force_save", type=str2bool, default=False)
     parser.add_argument("--save_outputs_root_dir", type=str, default="outputs")
     parser.add_argument("--top_k", type=int, default=50)
     parser.add_argument("--is_all_layers", type=str2bool, default=False)

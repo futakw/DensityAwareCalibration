@@ -7,7 +7,7 @@ python3 extract_feature_and_knn_score.py \
     --model_path classifier_ckpts/cifar10/resnet18.pth \
     --save_only_ood_scores True \
     --top_k 50 \
-    --test_data_type natural gaussian_noise 
+    --test_data_type natural gaussian_noise
 
 # run DAC (compare with ETS or SPL)
 combination_method=ETS # ETS or SPL

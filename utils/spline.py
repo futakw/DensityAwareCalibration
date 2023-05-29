@@ -28,6 +28,10 @@ from scipy.special import softmax
 
 ######### My code
 def get_spline_calib_func(logits, labels, n=-1, spline_method="natural", splines=6):
+    """
+    logits: outputs from neural networks *before softmax*
+    labels: one-hot labels
+    """
     # to run Spline calibration from:
     # https://github.com/kartikgupta-at-anu/spline-calibration
     y_probs_val, y_val = softmax(logits, 1), np.argmax(labels, axis=1)
