@@ -190,3 +190,17 @@ class FeatureExtractor(nn.Module):
             features = self.features
             self.features = []
             return features
+
+if __name__=="__main__":
+
+    arch = "resnet18"
+    class_num = 10
+
+    model = get_model(arch, class_num, pretrained=False)
+
+    print("Model arch:")
+    print(model)
+
+    # check available layers
+    for name, module in model.named_modules():
+        print("- ", name)

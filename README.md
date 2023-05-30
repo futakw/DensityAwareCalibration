@@ -89,6 +89,45 @@ bash scripts/whole_pipeline.sh
 ```
 ("bash scripts/whole_pipeline_all.sh" to extract features for all corruption data)
 
+## 3. Calibrate your own classifier
+- 3.1. Add your model to utils/get_models.py
+- 3.2. Check the names of layers,
+You can modify and run "python3 utils/get_models.py", or simply run the following.
+```
+model = get_model(**args)
+print(model)
+
+# check available layers
+for name, module in model.named_modules():
+    print("- ", name)
+```
+- 3.3. Select layers to use in DAC.
+Instead of using only logits, as existing post-hoc methods do, DAC uses features from intermediate layers of the classifier that have calibration-related information.
+For neural networks that have block structures (most neural networks do), we recommend to pick,
+- (1) the very last layer of each block
+- (2) the immediate layer before the first block
+- (3) the layer just before the fully-connected layers at the end of neural networks
+- (4) the logits layer 
+(Please see Section C in the Appendix of our paper for detailed explanation). Although it is also possible to use all layers, we recommend to select the layers with the above strategy for much faster optimization and calibration.
+
+Once you selected the layers, please put the name list of layers in "constants/layer_names.py", so that "get_layers_name()" returns the layer names. For example, 
+```
+if "resnet" in model_name:
+    return_nodes = [
+        "maxpool",
+        "layer1",
+        "layer2",
+        "layer3",
+        "layer4",
+    ]
+```
+
+- 3.4. Modify "scripts/whole_pipeline.sh" and run.
+You should specify the model_name and model_path. 
+If necessary, modify "utils/dataset.py" and specify the dataset name.
+
+
+
 ## Structure of this repository
 - density_aware_calib.py: Our method is here.
 - utils: Some codes imported and modified from other repos.
