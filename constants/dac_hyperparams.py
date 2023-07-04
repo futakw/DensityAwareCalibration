@@ -12,6 +12,6 @@ hyperparams = {
     "imagenet":{
         "num_classes": 1000,
         "knn_k": 10, # if using 1% of ImageNet data, use 10
-        "train_data_ratio": 0.1
+        "train_data_ratio": 0.01
     }
 }
