@@ -91,7 +91,7 @@ bash scripts/whole_pipeline.sh
 
 ## Calibrate your own classifier
 ### 1. Add your model to utils/get_models.py
-### 2. Check the names of layers,
+### 2. Check the names of layers
 You can modify and run "python3 utils/get_models.py", or simply run the following.
 ```
 model = get_model(**args)
@@ -137,7 +137,7 @@ If necessary, modify "utils/dataset.py" and specify the dataset name.
     - SPL: from https://github.com/kartikgupta-at-anu/spline-calibration
 
 
-## Note: 
+## Note: How to store features/logits/labels to try our repository.
 features/ood_score, outputs (logits), labels from a classifier will be saved in the following structure, by running _extract_feature_and_knn_score.py_:
 ```
 - outputs
