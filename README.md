@@ -137,7 +137,7 @@ If necessary, modify "utils/dataset.py" and specify the dataset name.
     - SPL: from https://github.com/kartikgupta-at-anu/spline-calibration
 
 
-## Note: How to store features/logits/labels to try our repository.
+## Note: The structure of the directory to store features/logits/labels.
 features/ood_score, outputs (logits), labels from a classifier will be saved in the following structure, by running _extract_feature_and_knn_score.py_:
 ```
 - outputs
